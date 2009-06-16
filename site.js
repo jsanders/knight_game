@@ -52,14 +52,22 @@ function legalMoves(cell) {
   return LEGAL_MOVES;
 }
 
+String.prototype.col = function() {
+  return parseInt(this.slice(this.indexOf('_') + 1, this.lastIndexOf('_')));
+}
+
+String.prototype.row = function() {
+  return parseInt(this.slice(this.lastIndexOf('_') + 1));
+}
+
 String.prototype.offset = function(x, y) {
-  var idCol = parseInt(this[1]) + x;
-  var idRow = parseInt(this[2]) + y;
+  var idCol = this.col() + x;
+  var idRow = this.row() + y;
 
   if(idCol > COLS || idRow > ROWS || idCol < 1 || idRow < 1) {
     return null;
   } else {
-    return '_' + idCol + idRow;
+    return '_' + idCol + '_' + idRow;
   }
 }
 
@@ -75,7 +83,7 @@ function generateBoard() {
       var colNum = i + 1;
       var cell = $(document.createElement('div'));
       cell.addClassName('cell');
-      cell.writeAttribute('id', '_' + colNum + rowNum);
+      cell.writeAttribute('id', '_' + colNum + '_' + rowNum);
 
       if(colNum == 1) cell.addClassName('first');
       if(colNum == COLS) cell.addClassName('last');
@@ -89,7 +97,10 @@ function generateBoard() {
 }
 
 function generateGame() {
-  var startCell = $('_' + rand(COLS) + rand(ROWS));
+  do {
+    var startCell = $('_' + rand(COLS) + '_' + rand(ROWS));
+  } while(legalMovesForGeneration(startCell).length == 0);
+
   var knight = $(document.createElement('img'));
   
   startCell.addClassName('visited');

@@ -2,6 +2,7 @@
   border: 2px solid black;
   width: 5em;
   height: 5em;
+  background: white;
   float: left;
 }
 
@@ -15,7 +16,6 @@
 .top { border-top: 4px solid black; }
 .bottom { border-bottom: 4px solid black; }
 
-.unvisitable { background-color: white; }
 .unvisited { background-color: red; }
 .visited { background-color: blue; }
 

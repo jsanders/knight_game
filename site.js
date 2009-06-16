@@ -1,6 +1,16 @@
+var COLS = 3;
+var ROWS = 3;
+var LEGAL_MOVES = [];
+
 Event.observe(window, 'load', function() { 
-  setHandlerForLegalMoves($('knight').parentNode);
+  setupGame();
 });
+
+function setupGame() {
+  generateBoard();
+  generateGame();
+  setHandlerForLegalMoves();
+}
 
 function move(event) {
   var element = event.element();
@@ -14,29 +24,33 @@ function move(event) {
   setHandlerForLegalMoves(element);
 
   if($$('.unvisited').length == 0) {
-    $('announcements').innerHTML = 'You win!';
+    ROWS++;
+    COLS++;
+    setupGame();
   }
 }
 
 function setHandlerForLegalMoves(element) {
+  var element = $('knight').parentNode
   legalMoves(element).each(function(item) {
     $(item).observe('click', move);
   });
 }
 
-function legalMoves(cell) {
-  LEGAL_MOVES = 
-    [ cell.id.offset(1, 2), cell.id.offset(2, 1),
-      cell.id.offset(-1, 2), cell.id.offset(-2, 1),
-      cell.id.offset(-1, -2), cell.id.offset(-2, -1),
-      cell.id.offset(1, -2), cell.id.offset(2, -1)
-    ].compact().reject(function(item) { return $(item).hasClassName('unvisitable') });
-  return LEGAL_MOVES;
+function legalMovesForGeneration(cell) {
+  return [ cell.id.offset(1, 2), cell.id.offset(2, 1),
+           cell.id.offset(-1, 2), cell.id.offset(-2, 1),
+           cell.id.offset(-1, -2), cell.id.offset(-2, -1),
+           cell.id.offset(1, -2), cell.id.offset(2, -1)
+         ].compact();
 }
 
-var COLS = 3;
-var ROWS = 3;
-var LEGAL_MOVES = [];
+function legalMoves(cell) {
+  LEGAL_MOVES = legalMovesForGeneration(cell).select(function(item) {
+    return ($(item).hasClassName('visited') || $(item).hasClassName('unvisited')); 
+  });
+  return LEGAL_MOVES;
+}
 
 String.prototype.offset = function(x, y) {
   var idCol = parseInt(this[1]) + x;
@@ -47,4 +61,63 @@ String.prototype.offset = function(x, y) {
   } else {
     return '_' + idCol + idRow;
   }
+}
+
+function generateBoard() {
+  $$('.row').invoke('remove');
+  ROWS.times(function(j) {
+    var rowNum = j + 1;
+    var row = $(document.createElement('div'));
+    row.addClassName('row');
+    row.writeAttribute('id', 'row' + rowNum);
+
+    COLS.times(function(i) {
+      var colNum = i + 1;
+      var cell = $(document.createElement('div'));
+      cell.addClassName('cell');
+      cell.writeAttribute('id', '_' + colNum + rowNum);
+
+      if(colNum == 1) cell.addClassName('first');
+      if(colNum == COLS) cell.addClassName('last');
+      if(rowNum == 1) cell.addClassName('bottom');
+      if(rowNum == ROWS) cell.addClassName('top');
+
+      row.appendChild(cell);
+    });
+    $('board').insert( { top: row } );
+  });
+}
+
+function generateGame() {
+  var startCell = $('_' + rand(COLS) + rand(ROWS));
+  var knight = $(document.createElement('img'));
+  
+  startCell.addClassName('visited');
+
+  knight.writeAttribute('src', 'black_knight.png');
+  knight.writeAttribute('id', 'knight');
+  startCell.insert( { top: knight } );
+
+  findNextCell(startCell, 1);
+  setHandlerForLegalMoves($('knight').parentNode);
+}
+
+function findNextCell(cell, alreadyFound) {
+  if( alreadyFound > (ROWS * COLS) * (5.0 / 8.0) ) {
+    return;
+  } else {
+    var moves = legalMovesForGeneration(cell);
+    var nextCell = $(moves[ rand(moves.length) - 1 ]);
+
+    if(nextCell.hasClassName('unvisited') || nextCell.hasClassName('visited')) {
+      findNextCell(nextCell, alreadyFound);
+    } else {
+      nextCell.addClassName('unvisited');
+      findNextCell(nextCell, alreadyFound + 1);
+    }
+  }
+}
+
+function rand(max) {
+  return Math.floor(Math.random() * max + 1);
 }

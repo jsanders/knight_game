@@ -20,7 +20,6 @@ function move(event) {
 
 function setHandlerForLegalMoves(element) {
   legalMoves(element).each(function(item) {
-    console.log('observing ' + item);
     $(item).observe('click', move);
   });
 }

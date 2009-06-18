@@ -1,7 +1,7 @@
 .cell {
-  border: 2px solid black;
-  width: 5em;
-  height: 5em;
+  border: 1px solid black;
+  width: 3em;
+  height: 3em;
   background: white;
   float: left;
 }
@@ -11,10 +11,10 @@
 }
 
 
-.first { border-left: 4px solid black; }
-.last { border-right: 4px solid black; }
-.top { border-top: 4px solid black; }
-.bottom { border-bottom: 4px solid black; }
+.first { border-left: 2px solid black; }
+.last { border-right: 2px solid black; }
+.top { border-top: 2px solid black; }
+.bottom { border-bottom: 2px solid black; }
 
 .unvisited { background-color: red; }
 .visited { background-color: blue; }

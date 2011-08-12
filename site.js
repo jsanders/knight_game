@@ -1,8 +1,15 @@
 var COLS = 3;
 var ROWS = 3;
 var LEGAL_MOVES = [];
+var save;
+var freshBoard;
+
 
 Event.observe(window, 'load', function() { 
+  $('regenerate').observe('click', setupGame);
+  $('restart').observe('click', function() {restoreState(freshBoard)});
+  $('save').observe('click', function() {save = saveState()});
+  $('load').observe('click', function() {restoreState(save)});
   setupGame();
 });
 
@@ -10,6 +17,7 @@ function setupGame() {
   generateBoard();
   generateGame();
   setHandlerForLegalMoves();
+  save = freshBoard = saveState();
 }
 
 function move(event) {
@@ -42,12 +50,14 @@ function legalMovesForGeneration(cell) {
            cell.id.offset(-1, 2), cell.id.offset(-2, 1),
            cell.id.offset(-1, -2), cell.id.offset(-2, -1),
            cell.id.offset(1, -2), cell.id.offset(2, -1)
-         ].compact();
+         ].compact().reject(function(item) {
+           return ($(item).hasClassName('visited'));
+         });
 }
 
 function legalMoves(cell) {
   LEGAL_MOVES = legalMovesForGeneration(cell).select(function(item) {
-    return ($(item).hasClassName('visited') || $(item).hasClassName('unvisited')); 
+    return ($(item).hasClassName('unvisited')); 
   });
   return LEGAL_MOVES;
 }
@@ -114,7 +124,7 @@ function generateGame() {
 }
 
 function findNextCell(cell, alreadyFound) {
-  if( alreadyFound > (ROWS * COLS) * (5.0 / 8.0) ) {
+  if( alreadyFound > (ROWS * COLS) * (5.0 / 8.0) || legalMovesForGeneration(cell).length == 0) {
     return;
   } else {
     var moves = legalMovesForGeneration(cell);
@@ -127,6 +137,24 @@ function findNextCell(cell, alreadyFound) {
       findNextCell(nextCell, alreadyFound + 1);
     }
   }
+}
+
+function saveState() {
+  return {
+    visited: $$('.visited'),
+    current: $('knight').parentNode
+  }
+}
+
+function restoreState(state) {
+  if (!state) return;
+
+  var knight = $('knight');
+  $$('.visited').each(function(cell){ cell.removeClassName('visited'); cell.addClassName('unvisited')})
+  state['visited'].each(function(cell) { cell.addClassName('visited') });
+  state['current'].appendChild(knight);
+  LEGAL_MOVES.each(function(item) { $(item).stopObserving('click'); });
+  setHandlerForLegalMoves(knight.parentNode)
 }
 
 function rand(max) {

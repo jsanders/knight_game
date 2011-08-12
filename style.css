@@ -16,7 +16,7 @@
 .top { border-top: 2px solid black; }
 .bottom { border-bottom: 2px solid black; }
 
-.unvisited { background-color: red; }
+.valid { background-color: red; }
 .visited { background-color: blue; }
 
 

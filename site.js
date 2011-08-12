@@ -3,6 +3,7 @@ var ROWS = 3;
 var LEGAL_MOVES = [];
 var save;
 var freshBoard;
+var stateStack = [];
 
 
 Event.observe(window, 'load', function() { 
@@ -10,6 +11,7 @@ Event.observe(window, 'load', function() {
   $('restart').observe('click', function() {restoreState(freshBoard)});
   $('save').observe('click', function() {save = saveState()});
   $('load').observe('click', function() {restoreState(save)});
+  $('undo').observe('click', function() {restoreState(stateStack.pop())});
   setupGame();
 });
 
@@ -17,10 +19,12 @@ function setupGame() {
   generateBoard();
   generateGame();
   setHandlerForLegalMoves();
+  stateStack = [];
   save = freshBoard = saveState();
 }
 
 function move(event) {
+  stateStack.push(saveState());
   var element = event.element();
 
   element.addClassName('visited');
@@ -150,7 +154,8 @@ function findNextCell(cell, alreadyFound) {
 function saveState() {
   return {
     visited: $$('.visited'),
-    current: $('knight').parentNode
+    current: $('knight').parentNode,
+    stack: stateStack.slice()
   }
 }
 
@@ -160,6 +165,7 @@ function restoreState(state) {
   $$('.valid').each(function(item) { $(item).stopObserving('click') });
   $$('.visited').each(function(cell) { cell.removeClassName('visited') });
   state['visited'].each(function(cell) { cell.addClassName('visited') });
+  stateStack = state['stack'];
 
   var knight = $('knight');
   state['current'].appendChild(knight);

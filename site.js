@@ -150,8 +150,8 @@ function restoreState(state) {
   if (!state) return;
 
   var knight = $('knight');
-  $$('.visited').each(function(cell){ cell.removeClassName('visited'); cell.addClassName('unvisited')})
-  state['visited'].each(function(cell) { cell.addClassName('visited') });
+
+  $$('.visited').concat(state['visited']).each(toggleVisited);
   state['current'].appendChild(knight);
   LEGAL_MOVES.each(function(item) { $(item).stopObserving('click'); });
   setHandlerForLegalMoves(knight.parentNode)
@@ -159,4 +159,9 @@ function restoreState(state) {
 
 function rand(max) {
   return Math.floor(Math.random() * max + 1);
+}
+
+function toggleVisited(element) {
+  element.toggleClassName('unvisited');
+  element.toggleClassName('visited');
 }

@@ -157,9 +157,9 @@ function saveState() {
 function restoreState(state) {
   if (!state) return;
 
-  $$('.valid').each(function(item) { $(item).stopObserving('click'); });
-  $$('.visited').each(function(cell) {cell.removeClassName('visited')});
-  state['visited'].each(function(cell) {cell.addClassName('visited')});
+  $$('.valid').each(function(item) { $(item).stopObserving('click') });
+  $$('.visited').each(function(cell) { cell.removeClassName('visited') });
+  state['visited'].each(function(cell) { cell.addClassName('visited') });
 
   var knight = $('knight');
   state['current'].appendChild(knight);

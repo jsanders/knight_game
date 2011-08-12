@@ -23,7 +23,6 @@ function setupGame() {
 function move(event) {
   var element = event.element();
 
-  element.removeClassName('unvisited');
   element.addClassName('visited');
   element.appendChild($('knight'));
 
@@ -31,11 +30,19 @@ function move(event) {
   
   setHandlerForLegalMoves(element);
 
-  if($$('.unvisited').length == 0) {
+  if(isBoardFinished()) {
     ROWS++;
     COLS++;
     setupGame();
   }
+}
+
+function isBoardFinished() {
+  return(
+    $$('.valid').reject(function(cell) {
+      return cell.hasClassName('visited');
+    }).length < 1
+  );
 }
 
 function setHandlerForLegalMoves(element) {
@@ -57,7 +64,7 @@ function legalMovesForGeneration(cell) {
 
 function legalMoves(cell) {
   LEGAL_MOVES = legalMovesForGeneration(cell).select(function(item) {
-    return ($(item).hasClassName('unvisited')); 
+    return ($(item).hasClassName('valid') && !$(item).hasClassName('visited')); 
   });
   return LEGAL_MOVES;
 }
@@ -130,10 +137,11 @@ function findNextCell(cell, alreadyFound) {
     var moves = legalMovesForGeneration(cell);
     var nextCell = $(moves[ rand(moves.length) - 1 ]);
 
-    if(nextCell.hasClassName('unvisited') || nextCell.hasClassName('visited')) {
+    if(nextCell.hasClassName('valid')) {
       findNextCell(nextCell, alreadyFound);
-    } else {
-      nextCell.addClassName('unvisited');
+    }
+    else {
+      nextCell.addClassName('valid');
       findNextCell(nextCell, alreadyFound + 1);
     }
   }
@@ -149,11 +157,12 @@ function saveState() {
 function restoreState(state) {
   if (!state) return;
 
-  var knight = $('knight');
-  $$('.visited').each(function(cell){ cell.removeClassName('visited'); cell.addClassName('unvisited')})
+  $$('.valid').each(function(item) { $(item).stopObserving('click') });
+  $$('.visited').each(function(cell) { cell.removeClassName('visited') });
   state['visited'].each(function(cell) { cell.addClassName('visited') });
+
+  var knight = $('knight');
   state['current'].appendChild(knight);
-  LEGAL_MOVES.each(function(item) { $(item).stopObserving('click'); });
   setHandlerForLegalMoves(knight.parentNode)
 }
 

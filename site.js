@@ -180,10 +180,7 @@ function rand(max) {
 }
 
 // Performance on this is terrible, works great up to 5x5.
-// If board state was stored in memory vs class/div states, this would
-// perform way better.
-function solveBoard(state) {
-  if (!state) state = saveState();
+function solveBoard() {
   if (isBoardFinished()) {
     console.log("We won!");
     return true;
@@ -194,12 +191,12 @@ function solveBoard(state) {
   var solvable_move = moves.find(function(div) {
     move($(div), false);
     console.log("Moving to '"+ div +"'")
-    var solvable = solveBoard(saveState());
-    if (!solvable || isBoardFinished()) restoreState(state);
+    var solvable = solveBoard();
+    if (!solvable || isBoardFinished()) restoreState(stateStack.pop());
     return solvable;
   });
 
-  if (!solvable_move) {console.log("Path has no winnable moves")}
-  return solvable_move
+  if (!solvable_move) console.log("Path has no winnable moves");
+  return solvable_move;
 }
 

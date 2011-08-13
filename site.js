@@ -5,7 +5,6 @@ var save;
 var freshBoard;
 var stateStack = [];
 
-
 Event.observe(window, 'load', function() { 
   $('regenerate').observe('click', setupGame);
   $('restart').observe('click', function() {restoreState(freshBoard)});
@@ -23,9 +22,9 @@ function setupGame() {
   save = freshBoard = saveState();
 }
 
-function move(event) {
+function move(element, allowWinning) {
+  if (allowWinning == undefined) allowWinning = true;
   stateStack.push(saveState());
-  var element = event.element();
 
   element.addClassName('visited');
   element.appendChild($('knight'));
@@ -34,11 +33,15 @@ function move(event) {
   
   setHandlerForLegalMoves(element);
 
-  if(isBoardFinished()) {
-    ROWS++;
-    COLS++;
-    setupGame();
+  if(isBoardFinished() && allowWinning) {
+    advanceBoard();
   }
+}
+
+function advanceBoard() {
+  ROWS++;
+  COLS++;
+  setupGame();
 }
 
 function isBoardFinished() {
@@ -52,7 +55,7 @@ function isBoardFinished() {
 function setHandlerForLegalMoves(element) {
   var element = $('knight').parentNode
   legalMoves(element).each(function(item) {
-    $(item).observe('click', move);
+    $(item).observe('click', function(event) { move(event.element()) });
   });
 }
 
@@ -175,3 +178,28 @@ function restoreState(state) {
 function rand(max) {
   return Math.floor(Math.random() * max + 1);
 }
+
+// Performance on this is terrible, works great up to 5x5.
+// If board state was stored in memory vs class/div states, this would
+// perform way better.
+function solveBoard(state) {
+  if (!state) state = saveState();
+  if (isBoardFinished()) {
+    console.log("We won!");
+    return true;
+  }
+
+  var current = $('knight').parentNode;
+  var moves = legalMoves(current);
+  var solvable_move = moves.find(function(div) {
+    move($(div), false);
+    console.log("Moving to '"+ div +"'")
+    var solvable = solveBoard(saveState());
+    if (!solvable || isBoardFinished()) restoreState(state);
+    return solvable;
+  });
+
+  if (!solvable_move) {console.log("Path has no winnable moves")}
+  return solvable_move
+}
+

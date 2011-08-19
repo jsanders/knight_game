@@ -3,13 +3,14 @@ var ROWS = 3;
 var LEGAL_MOVES = [];
 var save;
 var freshBoard;
-
+var stateStack = [];
 
 Event.observe(window, 'load', function() { 
   $('regenerate').observe('click', setupGame);
   $('restart').observe('click', function() {restoreState(freshBoard)});
   $('save').observe('click', function() {save = saveState()});
   $('load').observe('click', function() {restoreState(save)});
+  $('undo').observe('click', function() {restoreState(stateStack.pop())});
   setupGame();
 });
 
@@ -17,11 +18,13 @@ function setupGame() {
   generateBoard();
   generateGame();
   setHandlerForLegalMoves();
+  stateStack = [];
   save = freshBoard = saveState();
 }
 
-function move(event) {
-  var element = event.element();
+function move(element, allowWinning) {
+  if (allowWinning == undefined) allowWinning = true;
+  stateStack.push(saveState());
 
   element.addClassName('visited');
   element.appendChild($('knight'));
@@ -30,11 +33,15 @@ function move(event) {
   
   setHandlerForLegalMoves(element);
 
-  if(isBoardFinished()) {
-    ROWS++;
-    COLS++;
-    setupGame();
+  if(isBoardFinished() && allowWinning) {
+    advanceBoard();
   }
+}
+
+function advanceBoard() {
+  ROWS++;
+  COLS++;
+  setupGame();
 }
 
 function isBoardFinished() {
@@ -48,7 +55,7 @@ function isBoardFinished() {
 function setHandlerForLegalMoves(element) {
   var element = $('knight').parentNode
   legalMoves(element).each(function(item) {
-    $(item).observe('click', move);
+    $(item).observe('click', function(event) { move(event.element()) });
   });
 }
 
@@ -150,7 +157,8 @@ function findNextCell(cell, alreadyFound) {
 function saveState() {
   return {
     visited: $$('.visited'),
-    current: $('knight').parentNode
+    current: $('knight').parentNode,
+    stack: stateStack.slice()
   }
 }
 
@@ -160,6 +168,7 @@ function restoreState(state) {
   $$('.valid').each(function(item) { $(item).stopObserving('click') });
   $$('.visited').each(function(cell) { cell.removeClassName('visited') });
   state['visited'].each(function(cell) { cell.addClassName('visited') });
+  stateStack = state['stack'];
 
   var knight = $('knight');
   state['current'].appendChild(knight);
@@ -169,3 +178,25 @@ function restoreState(state) {
 function rand(max) {
   return Math.floor(Math.random() * max + 1);
 }
+
+// Performance on this is terrible, works great up to 5x5.
+function solveBoard() {
+  if (isBoardFinished()) {
+    console.log("We won!");
+    return true;
+  }
+
+  var current = $('knight').parentNode;
+  var moves = legalMoves(current);
+  var solvable_move = moves.find(function(div) {
+    move($(div), false);
+    console.log("Moving to '"+ div +"'")
+    var solvable = solveBoard();
+    if (!solvable || isBoardFinished()) restoreState(stateStack.pop());
+    return solvable;
+  });
+
+  if (!solvable_move) console.log("Path has no winnable moves");
+  return solvable_move;
+}
+
